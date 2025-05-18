@@ -1,3 +1,6 @@
+# Copie du fichier src/app.py pour compatibilité Streamlit Cloud
+# (toutes les fonctionnalités et la gestion d'erreurs sont conservées)
+
 import streamlit as st
 import sys
 import os
@@ -7,7 +10,7 @@ from dotenv import load_dotenv
 import json
 
 # Add src directory to Python path
-current_dir = Path(__file__).parent
+current_dir = Path(__file__).parent / "src"
 root_dir = current_dir.parent
 sys.path.append(str(root_dir))
 
@@ -20,9 +23,7 @@ upload_dir = current_dir / "uploads"
 upload_dir.mkdir(exist_ok=True)
 
 def create_crew():
-    """Create and return the crew with all agents and tasks"""
     search_tool = SerperDevTool()
-
     supervisor = Agent(
         role="Supervisor",
         goal="Coordinate agents and ensure consistency of results",
@@ -38,7 +39,6 @@ def create_crew():
         """,
         verbose=True
     )
-
     analyst = Agent(
         role="Expense Analyst",
         goal="Create detailed expense analysis and categorization from invoice data",
@@ -50,7 +50,6 @@ def create_crew():
         verbose=True,
         tools=[search_knowledge_base, access_memory],
     )
-
     reporter = Agent(
         role="Financial Reporter",
         goal="Write a clear and structured financial report based on expense analysis",
@@ -60,9 +59,8 @@ def create_crew():
             easy to understand and actionable.
         """,
         verbose=True,
-        tools=[search_knowledge_base, access_memory]
+        tools=[search_knowledge_base, access_memory],
     )
-
     compliance_auditor = Agent(
         role="Compliance Auditor",
         goal="Verify invoices for errors, fraud, and compliance issues",
@@ -74,7 +72,6 @@ def create_crew():
         verbose=True,   
         tools=[search_knowledge_base, access_memory]
     )
-
     supplier_negotiator = Agent(
         role="Supplier Negotiator",
         goal="Find alternative suppliers with better pricing and negotiate discounts",
@@ -86,7 +83,6 @@ def create_crew():
         verbose=True,
         tools=[search_tool, access_memory],
     )
-
     analysis_task = Task(
         description="""
             Analyze all expense data to create a detailed breakdown report.
@@ -106,7 +102,6 @@ def create_crew():
         output_file="expense_report.md",
         agent=analyst
     )
-
     write_report_task = Task(
         description="""
             Create a strategic financial report based on the expense analysis.
@@ -123,7 +118,6 @@ def create_crew():
         agent=reporter,
         depends_on=[analysis_task]
     )
-
     audit_task = Task(
         description="""
             Review all invoices for compliance issues and potential fraud.
@@ -139,7 +133,6 @@ def create_crew():
         agent=compliance_auditor,
         depends_on=[analysis_task]
     )
-
     find_and_negotiate_task = Task(
         description="""
             Find alternative suppliers and analyze cost-saving opportunities.
@@ -155,7 +148,6 @@ def create_crew():
         agent=supplier_negotiator,
         depends_on=[analysis_task, audit_task]
     )
-
     supervision_task = Task(
         description="""
             Supervise the entire analysis process and ensure quality results.
@@ -171,8 +163,6 @@ def create_crew():
         agent=supervisor,
         depends_on=[analysis_task, write_report_task, audit_task, find_and_negotiate_task]
     )
-
-    # Create Crew with hierarchical process
     crew = Crew(
         agents=[analyst, reporter, compliance_auditor, supplier_negotiator],
         tasks=[analysis_task, write_report_task, audit_task, find_and_negotiate_task, supervision_task],
@@ -180,18 +170,15 @@ def create_crew():
         manager_agent=supervisor,
         verbose=True
     )
-
     return crew
 
 def save_api_keys(keys):
-    """Save API keys to .env file"""
     with open('.env', 'w') as f:
         for key, value in keys.items():
-            if value:  # Only write non-empty values
+            if value:
                 f.write(f'{key}={value}\n')
 
 def load_api_keys():
-    """Load API keys from .env file"""
     load_dotenv()
     return {
         'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY', ''),
@@ -206,22 +193,14 @@ def main():
         page_icon="📊",
         layout="wide"
     )
-
-    # Header
     st.title("🤖 AI Expense Analysis Tool")
     st.markdown("""
     ### Free AI-Powered Expense Audit for Your Business
     This tool uses advanced AI agents to analyze your expenses, identify savings opportunities, 
     and negotiate with suppliers - all automatically!
     """)
-
-    # Sidebar for API Configuration
     st.sidebar.title("⚙️ Configuration")
-    
-    # Load existing API keys
     api_keys = load_api_keys()
-    
-    # API Key inputs
     with st.sidebar.expander("🔑 API Keys Configuration", expanded=True):
         new_api_keys = {}
         new_api_keys['OPENAI_API_KEY'] = st.text_input(
@@ -244,15 +223,10 @@ def main():
             value=api_keys['SERPER_API_KEY'],
             type="password"
         )
-        
         if st.button("💾 Save API Keys"):
             save_api_keys(new_api_keys)
             st.success("API keys saved successfully!")
-
-    # Main content area
     st.markdown("---")
-
-    # File Upload Section
     st.header("📎 Upload Invoices")
     st.markdown("""
     Please upload your invoice files for analysis. Supported formats:
@@ -262,15 +236,12 @@ def main():
     - Text (.txt)
     - Images (.jpg, .png)
     """)
-    
     uploaded_files = st.file_uploader(
         "Drop your invoice files here",
         accept_multiple_files=True,
         type=['pdf', 'xlsx', 'xls', 'csv', 'jpg', 'png', 'txt']
     )
-
     if uploaded_files:
-        # Save uploaded files
         try:
             for uploaded_file in uploaded_files:
                 file_path = upload_dir / uploaded_file.name
@@ -282,12 +253,9 @@ def main():
             st.stop()
     else:
         st.info("⚠️ Please upload your invoice files before starting the analysis")
-
-    # AI Agents Description
     st.markdown("---")
     with st.expander("🤖 Meet Your AI Analysis Team", expanded=True):
         col1, col2 = st.columns(2)
-        
         with col1:
             st.markdown("""
             #### 📈 Expense Analyst
@@ -296,7 +264,6 @@ def main():
             #### 📝 Financial Reporter
             Creates clear, structured reports from complex financial data.
             """)
-            
         with col2:
             st.markdown("""
             #### 🔍 Compliance Auditor
@@ -305,30 +272,21 @@ def main():
             #### 💼 Supplier Negotiator
             Finds alternative suppliers and negotiates better prices.
             """)
-
-    # Launch Analysis Section
     st.markdown("---")
     st.header("🚀 Launch Analysis")
-    
-    # Check if all required API keys are set and files are uploaded
     required_keys = ['OPENAI_API_KEY', 'NEEDLE_API_KEY', 'NEEDLE_COLLECTION_ID', 'SERPER_API_KEY']
     missing_keys = [key for key in required_keys if not new_api_keys.get(key)]
-    
     if missing_keys:
         st.warning(f"⚠️ Please configure the following API keys first: {', '.join(missing_keys)}")
         st.stop()
-    
     if not uploaded_files:
         st.warning("⚠️ Please upload invoice files before starting the analysis")
         st.stop()
-    
     if st.button("🔄 Start Free Expense Analysis", type="primary", use_container_width=True):
         try:
             with st.spinner("🤖 AI Agents are analyzing your expenses... This may take several minutes."):
-                # Progress indicators
                 progress_placeholder = st.empty()
                 report_placeholder = st.empty()
-                
                 progress_placeholder.markdown("""
                 #### Current Progress:
                 1. 📊 Processing uploaded files...
@@ -337,49 +295,36 @@ def main():
                 4. 💼 Negotiating with suppliers...
                 5. 📝 Generating final reports...
                 """)
-                
-                # Create and run the crew
                 crew = create_crew()
                 try:
                     result = crew.kickoff()
                 except Exception as e:
                     st.error(f"❌ Error during AI analysis: {str(e)}")
                     st.stop()
-                
                 progress_placeholder.markdown("""
                 #### Analysis Complete! ✅
                 All reports have been generated successfully.
                 """)
-                
                 st.success("🎉 Analysis completed successfully!")
                 st.balloons()
         except Exception as e:
             st.error(f"❌ Unexpected error: {str(e)}")
             st.stop()
-
-    # Display Reports Section
     st.markdown("---")
     st.header("📑 Generated Reports")
-    
-    # List of reports
     reports = [
         ("expense_report.md", "📊 Expense Analysis"),
         ("final_expense_report.md", "📑 Final Report"),
         ("compliance_audit.md", "🔍 Compliance Audit"),
         ("negotiated_suppliers.md", "💼 Supplier Negotiations")
     ]
-    
-    # Create tabs for each report
     tabs = st.tabs([name for _, name in reports])
-    
     for i, ((filename, _), tab) in enumerate(zip(reports, tabs)):
         with tab:
             try:
                 with open(filename, 'r', encoding='utf-8') as f:
                     content = f.read()
                     st.markdown(content)
-                    
-                    # Download button for each report
                     st.download_button(
                         f"⬇️ Download {filename}",
                         content,
@@ -390,8 +335,6 @@ def main():
                 st.info(f"No report generated yet. Run the analysis to generate {filename}.")
             except Exception as e:
                 st.error(f"❌ Error loading report {filename}: {str(e)}")
-
-    # Footer
     st.markdown("---")
     st.markdown("""
     ### 💡 Need Help?
@@ -401,4 +344,4 @@ def main():
     """)
 
 if __name__ == "__main__":
-    main() 
+    main()
