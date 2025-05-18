@@ -4,8 +4,3 @@ needle-sdk==1.0.0
 openai==1.12.0
 python-dotenv==1.0.1
 streamlit==1.31.1
-# Les dépendances ci-dessous sont déjà incluses dans streamlit ou ses dépendances
-# rich
-# markdown-it-py
-# mdurl
-# pygments
